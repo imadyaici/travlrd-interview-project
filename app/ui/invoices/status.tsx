@@ -71,12 +71,15 @@ export default function InvoiceStatus({
         {statuses.map(
           (newStatus) =>
             newStatus !== status && (
-              <form action={formAction}>
+              <form key={newStatus} action={formAction}>
                 <MenuItem>
                   {({ close }) => (
                     <>
                       <input hidden name="status" value={newStatus} />
-                      <button onClick={close} className="block px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:text-gray-900">
+                      <button
+                        onClick={close}
+                        className="block px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:text-gray-900"
+                      >
                         {newStatus}
                       </button>
                     </>

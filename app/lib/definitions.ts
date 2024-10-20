@@ -55,6 +55,14 @@ export type InvoicesTable = {
   status: 'pending' | 'paid' | 'canceled' | 'overdue';
 };
 
+export type LogsTable = {
+  id: string;
+  invoice_id: string;
+  status: 'pending' | 'paid' | 'canceled' | 'overdue';
+  user_email: string;
+  date: string;
+};
+
 export type CustomersTableType = {
   id: string;
   name: string;

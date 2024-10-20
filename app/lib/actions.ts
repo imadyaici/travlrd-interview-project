@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import { auth } from "@/auth"
 
 const FormSchema = z.object({
   id: z.string(),
@@ -132,6 +133,8 @@ export async function updateInvoiceStatus(
   }
 
   const { status } = validatedFields.data;
+  const date = new Date().toISOString().split('T')[0];
+  const session = await auth()
 
   try {
     await sql`
@@ -139,6 +142,11 @@ export async function updateInvoiceStatus(
       SET status = ${status}
       WHERE id = ${id}
     `;
+
+    await sql`
+      INSERT INTO logs (invoice_id, user_email, status, date)
+      VALUES (${id}, ${session?.user?.email}, ${status}, ${date})
+    `
 
   } catch (error) {
     return { message: 'Database Error: Failed to Update Invoice.' };

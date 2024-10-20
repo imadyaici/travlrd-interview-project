@@ -1,6 +1,9 @@
-import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+"use client";
+
+import { ArrowPathIcon, PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { deleteInvoice } from '@/app/lib/actions';
+import { deleteInvoice, StateForStatus, updateInvoiceStatus } from '@/app/lib/actions';
+import { useActionState } from 'react';
 
 export function CreateInvoice() {
   return (
@@ -33,6 +36,25 @@ export function DeleteInvoice({ id }: { id: string }) {
       <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
         <span className="sr-only">Delete</span>
         <TrashIcon className="w-5" />
+      </button>
+    </form>
+  );
+}
+
+export function RestoreStatus({ id, status }: { id: string, status: string }) {
+  const initialState: StateForStatus = { message: null, errors: {} };
+  const updateInvoiceStatusWithId = updateInvoiceStatus.bind(null, id);
+  const [state, formAction] = useActionState(
+    updateInvoiceStatusWithId,
+    initialState
+  );
+
+  return (
+    <form action={formAction}>
+      <input hidden name="status" value={status} />
+      <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
+        <span className="sr-only">Restore</span>
+        <ArrowPathIcon className="w-5" />
       </button>
     </form>
   );
