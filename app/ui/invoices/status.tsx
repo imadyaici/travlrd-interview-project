@@ -8,6 +8,7 @@ export default function InvoiceStatus({ status }: { status: string }) {
         "inline-flex items-center rounded-full px-2 py-1 text-xs",
         {
           "bg-gray-100 text-gray-500": status === "pending",
+          "bg-orange-500 text-white": status === "overdue",
           "bg-green-500 text-white": status === "paid",
           "bg-red-500 text-white": status === "canceled",
         }
@@ -17,6 +18,12 @@ export default function InvoiceStatus({ status }: { status: string }) {
         <>
           Pending
           <ClockIcon className="ml-1 w-4 text-gray-500" />
+        </>
+      ) : null}
+      {status === "overdue" ? (
+        <>
+          Overdue
+          <ClockIcon className="ml-1 w-4 text-white" />
         </>
       ) : null}
       {status === "paid" ? (
