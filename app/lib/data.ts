@@ -86,12 +86,28 @@ export async function fetchCardData() {
 const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredInvoices(
   query: string,
+  status: string,
   currentPage: number,
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
-  try {
-    const invoices = await sql<InvoicesTable>`
+  let statusQuery = ''
+  switch (status) {
+    case '':
+      break;
+    case 'overdue':
+      statusQuery += "AND invoices.status = 'pending' AND NOW()::DATE - invoices.date::DATE > 14"
+      break;
+    case 'pending':
+      statusQuery += "AND invoices.status = 'pending' AND NOW()::DATE - invoices.date::DATE <= 14"
+      break;
+    default:
+      statusQuery += `AND invoices.status = '${status}'`
+      break;
+  }
+
+
+  const dbQuery = `
       SELECT
         invoices.id,
         invoices.amount,
@@ -106,14 +122,17 @@ export async function fetchFilteredInvoices(
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
       WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
+        (customers.name ILIKE '${`%${query}%`}' OR
+        customers.email ILIKE '${ `%${query}%` }' OR
+        invoices.amount::text ILIKE '${ `%${query}%` }' OR
+        invoices.date::text ILIKE '${ `%${query}%` }')
+        ${statusQuery}
       ORDER BY invoices.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `;
+    `
+
+  try {
+    const invoices = await sql.query<InvoicesTable>(dbQuery);
 
     return invoices.rows;
   } catch (error) {
