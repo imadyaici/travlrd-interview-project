@@ -15,7 +15,7 @@ const FormSchema = z.object({
   amount: z.coerce
     .number()
     .gt(0, { message: 'Please enter an amount greater than $0.' }),
-  status: z.enum(['pending', 'paid'], {
+  status: z.enum(['pending', 'overdue', 'paid', 'canceled'], {
     invalid_type_error: 'Please select an invoice status.',
   }),
   date: z.string(),
@@ -23,11 +23,19 @@ const FormSchema = z.object({
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 const UpdateInvoice = FormSchema.omit({ date: true, id: true });
+const UpdateInvoiceStatus = FormSchema.pick({ status: true });
 
 export type State = {
   errors?: {
     customerId?: string[];
     amount?: string[];
+    status?: string[];
+  };
+  message?: string | null;
+};
+
+export type StateForStatus = {
+  errors?: {
     status?: string[];
   };
   message?: string | null;
@@ -99,6 +107,39 @@ export async function updateInvoice(
       SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
       WHERE id = ${id}
     `;
+  } catch (error) {
+    return { message: 'Database Error: Failed to Update Invoice.' };
+  }
+
+  revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
+}
+
+export async function updateInvoiceStatus(
+  id: string,
+  prevState: State,
+  formData: FormData,
+) {
+  const validatedFields = UpdateInvoiceStatus.safeParse({
+    status: formData.get('status'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Update Invoice Status.',
+    };
+  }
+
+  const { status } = validatedFields.data;
+
+  try {
+    await sql`
+      UPDATE invoices
+      SET status = ${status}
+      WHERE id = ${id}
+    `;
+
   } catch (error) {
     return { message: 'Database Error: Failed to Update Invoice.' };
   }
